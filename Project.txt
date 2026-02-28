@@ -1,0 +1,68 @@
+import streamlit as st
+
+st.title("AI Powered Smart Food Redistribution System")
+
+# ---------------- NGO DATA ----------------
+
+ngos = [
+    {"name": "Hope Foundation", "distance": 3, "hunger": 9, "capacity": 5},
+    {"name": "Smile Care NGO", "distance": 5, "hunger": 7, "capacity": 15},
+    {"name": "Helping Hands", "distance": 2, "hunger": 8, "capacity": 10},
+    {"name": "Food For All", "distance": 6, "hunger": 6, "capacity": 20}
+]
+
+# ---------------- USER INPUT ----------------
+
+quantity = st.number_input("Enter Food Quantity (kg)", min_value=1)
+food_type = st.text_input("Enter Food Type")
+hours = st.number_input("Hours Since Preparation", min_value=0)
+
+# ---------------- SPOILAGE RISK FUNCTION ----------------
+
+def calculate_risk(hours):
+    if hours <= 2:
+        return "Low", 1
+    elif hours <= 4:
+        return "Medium", 1.5
+    else:
+        return "High", 2
+
+# ---------------- FIND BEST NGO ----------------
+
+if st.button("Find Best NGO"):
+
+    risk_level, risk_weight = calculate_risk(hours)
+
+    st.subheader("Food Analysis")
+    st.write("Spoilage Risk:", risk_level)
+    st.write("Risk Weight Applied:", risk_weight)
+
+    scores = []
+
+    st.subheader("NGO Scores")
+
+    for ngo in ngos:
+
+        if quantity <= ngo["capacity"]:
+
+            capacity_factor = quantity / ngo["capacity"]
+
+            score = (quantity * ngo["hunger"] * risk_weight * capacity_factor) / (ngo["distance"] + 1)
+
+            scores.append((ngo["name"], score))
+
+            st.write(f"{ngo['name']} - Score: {round(score,2)}")
+
+        else:
+            st.write(f"{ngo['name']} - Rejected (Insufficient Capacity)")
+
+    if scores:
+
+        best_ngo = max(scores, key=lambda x: x[1])
+
+        st.success(f"Best NGO Selected: {best_ngo[0]}")
+        st.write("Reason: Highest optimized priority score considering hunger level, distance, urgency and capacity efficiency.")
+
+    else:
+        st.error("No NGO can handle this quantity.")
+
